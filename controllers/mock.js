@@ -238,7 +238,11 @@ module.exports = class MockController {
       return item.method === method && pathToRegexp(url).test(mockURL)
     })[0]
 
-    if (!api) ctx.throw(404)
+    if (!api) {
+      ctx.body = ctx.util.refail('接口不存在', 404)
+      return
+    }
+
     let rsa, des
     if (api.encode) {
       //  TODO 绑定到project
