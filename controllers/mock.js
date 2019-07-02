@@ -240,7 +240,6 @@ module.exports = class MockController {
 
     if (!api) {
       ctx.body = ctx.util.refail('接口不存在', 404)
-      return
     }
 
     let rsa, des
