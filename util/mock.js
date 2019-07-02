@@ -39,24 +39,28 @@ module.exports = {
       desc: '这只是一个响应 post 接口返回随机数据的例子',
       method: 'post',
       url: '/upload',
+      encode: false,
       mode: example.post
     },
     {
       desc: '根据请求参数返回指定数据，试试在 url 上加 ?name={任意值}',
       method: 'get',
       url: '/query',
+      encode: false,
       mode: example.get
     },
     {
       desc: '支持 restful 的 mock，替换 id 试试',
       method: 'get',
       url: '/restful/:id/list',
+      encode: false,
       mode: example.base
     },
     {
       desc: '支持接口代理的 mock，试试在 url 上加 ?s={数字}',
       method: 'get',
       url: '/proxy',
+      encode: false,
       mode: 'https://api.m.sohu.com/autonews/pool/?n=%E6%96%B0%E9%97%BB&s=1'
     },
     {
@@ -69,6 +73,7 @@ module.exports = {
       desc: '自定义响应的 mock',
       method: 'get',
       url: '/',
+      encode: true,
       mode: example.res
     }
   ]

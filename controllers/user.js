@@ -28,6 +28,7 @@ async function createUser (name, password) {
         project: projectId,
         description: item.desc,
         method: item.method,
+        encode: item.encode,
         url: item.url,
         mode: item.mode
       }))

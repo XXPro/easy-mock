@@ -1,6 +1,6 @@
 'use strict'
 
-const { Mock } = require('../models')
+const {Mock} = require('../models')
 
 module.exports = class MockProxy {
   static newAndSave (docs) {
@@ -27,6 +27,7 @@ module.exports = class MockProxy {
         url: mock.url,
         mode: mock.mode,
         method: mock.method,
+        encode: mock.encode,
         parameters: mock.parameters,
         description: mock.description,
         response_model: mock.response_model

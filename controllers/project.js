@@ -149,6 +149,7 @@ module.exports = class ProjectController {
       project: projects[0].id,
       description: item.description,
       method: item.method,
+      encode: item.encode,
       url: item.url,
       mode: item.mode
     }))

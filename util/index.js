@@ -30,6 +30,8 @@ module.exports = class BaseUtil {
     return redis
   }
 
+
+
   /**
    * 加密字符串
    * @param String str

@@ -1,7 +1,9 @@
 'use strict'
 
+const Vue = require('vue')
+
 const _ = require('lodash')
-const { VM } = require('vm2')
+const {VM} = require('vm2')
 const nodeURL = require('url')
 const JSZip = require('jszip')
 const Mock = require('mockjs')
@@ -11,7 +13,9 @@ const pathToRegexp = require('path-to-regexp')
 
 const util = require('../util')
 const ft = require('../models/fields_table')
-const { MockProxy, ProjectProxy, UserGroupProxy } = require('../proxy')
+const EncodeUtil = require('../util/encode')
+
+const {MockProxy, ProjectProxy, UserGroupProxy} = require('../proxy')
 
 const redis = util.getRedis()
 const defPageSize = config.get('pageSize')
@@ -24,16 +28,16 @@ async function checkByMockId (mockId, uid) {
   const project = await checkByProjectId(api.project.id, uid)
 
   if (typeof project === 'string') return project
-  return { api, project }
+  return {api, project}
 }
 
 async function checkByProjectId (projectId, uid) {
-  const project = await ProjectProxy.findOne({ _id: projectId })
+  const project = await ProjectProxy.findOne({_id: projectId})
 
   if (project) {
     const group = project.group
     if (group) {
-      const userGroup = await UserGroupProxy.findOne({ user: uid, group: group })
+      const userGroup = await UserGroupProxy.findOne({user: uid, group: group})
       if (!userGroup) return '无权限操作'
     } else if (project.user.id !== uid) {
       /* istanbul ignore else */
@@ -56,9 +60,11 @@ module.exports = class MockController {
     const mode = ctx.checkBody('mode').notEmpty().value
     const projectId = ctx.checkBody('project_id').notEmpty().value
     const description = ctx.checkBody('description').notEmpty().value
+    const encode = ctx.checkBody('encode').default(false).value
     const url = ctx.checkBody('url').notEmpty().match(/^\/.*$/i, 'URL 必须以 / 开头').value
     const method = ctx.checkBody('method').notEmpty().toLow().in(['get', 'post', 'put', 'delete', 'patch']).value
 
+    console.log('encode', encode)
     if (ctx.errors) {
       ctx.body = ctx.util.refail(null, 10001, ctx.errors)
       return
@@ -86,6 +92,7 @@ module.exports = class MockController {
       project: projectId,
       description,
       method,
+      encode,
       url,
       mode
     })
@@ -117,7 +124,7 @@ module.exports = class MockController {
       sort: '-create_at'
     }
 
-    const where = { project: projectId }
+    const where = {project: projectId}
 
     if (keywords) {
       const keyExp = new RegExp(keywords)
@@ -146,7 +153,7 @@ module.exports = class MockController {
 
     mocks = mocks.map(o => _.pick(o, ft.mock))
 
-    ctx.body = ctx.util.resuccess({ project: project || {}, mocks })
+    ctx.body = ctx.util.resuccess({project: project || {}, mocks})
   }
 
   /**
@@ -159,6 +166,7 @@ module.exports = class MockController {
     const id = ctx.checkBody('id').notEmpty().value
     const mode = ctx.checkBody('mode').notEmpty().value
     const description = ctx.checkBody('description').notEmpty().value
+    const encode = ctx.checkBody('encode').notEmpty().value
     const url = ctx.checkBody('url').notEmpty().match(/^\/.*$/i, 'URL 必须以 / 开头').value
     const method = ctx.checkBody('method').notEmpty().toLow().in(['get', 'post', 'put', 'delete', 'patch']).value
 
@@ -174,15 +182,16 @@ module.exports = class MockController {
       return
     }
 
-    const { api, project } = result
+    const {api, project} = result
 
     api.url = url
     api.mode = mode
     api.method = method
     api.description = description
+    api.encode = encode
 
     const existMock = await MockProxy.findOne({
-      _id: { $ne: api.id },
+      _id: {$ne: api.id},
       project: project.id,
       url: api.url,
       method: api.method
@@ -204,10 +213,10 @@ module.exports = class MockController {
    */
 
   static async getMockAPI (ctx) {
-    const { query, body } = ctx.request
+    const {query, body} = ctx.request
     const method = ctx.method.toLowerCase()
     const jsonpCallback = query.jsonp_param_name && (query[query.jsonp_param_name] || 'callback')
-    let { projectId, mockURL } = ctx.pathNode
+    let {projectId, mockURL} = ctx.pathNode
     const redisKey = 'project:' + projectId
     let apiData, apis, api
 
@@ -216,7 +225,7 @@ module.exports = class MockController {
     if (apis) {
       apis = JSON.parse(apis)
     } else {
-      apis = await MockProxy.find({ project: projectId })
+      apis = await MockProxy.find({project: projectId})
       if (apis[0]) await redis.set(redisKey, JSON.stringify(apis), 'EX', 60 * 30)
     }
 
@@ -230,17 +239,56 @@ module.exports = class MockController {
     })[0]
 
     if (!api) ctx.throw(404)
+    let rsa, des
+    if (api.encode) {
+      //  TODO 绑定到project
+      let privateKey = config.get('encode.privateKey')
+      let publicKey = config.get('encode.publicKey')
+
+      rsa = EncodeUtil.RSA(privateKey, publicKey)
+
+      if (!ctx.request.header.referer) {
+        try {
+          let encodeKey = rsa.decode(ctx.request.body.key)
+          des = EncodeUtil.ThreeDes(encodeKey.substr(8), encodeKey.substr(0, 8))
+
+        } catch (e) {
+          ctx.body = ctx.util.refail('接口请求失败,请求参数解密失败')
+          return
+        }
+      }
+    }
 
     Mock.Handler.function = function (options) {
       const mockUrl = api.url.replace(/{/g, ':').replace(/}/g, '') // /api/{user}/{id} => /api/:user/:id
       options.Mock = Mock
       options._req = ctx.request
       options._req.params = util.params(mockUrl, mockURL)
+      if (!ctx.request.header.referer) {
+        options._req.body = JSON.parse(des.decode(body.value).toString())
+      }
       options._req.cookies = ctx.cookies.get.bind(ctx)
       return options.template.call(options.context.currentContext, options)
     }
 
     if (/^http(s)?/.test(api.mode)) { // 代理模式
+      if (ctx.request.header.referer) {
+        let rangs = _.values('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
+        let key = _.sampleSize(rangs, 24).join('')
+        let iv = _.sampleSize(rangs, 8).join('')
+        des = EncodeUtil.ThreeDes(key, iv)
+        let requestId = _.sampleSize(rangs, 6).join('') + new Date().getTime()
+        let deviceId = Vue.ls.get('deviceId') || 'TEST' + _.sampleSize(rangs, 14).join('')
+        Vue.ls.set('deviceId', deviceId)
+
+        ctx.request.body.value = des.encode(JSON.stringify(body))
+        ctx.request.body.requestId = requestId
+        ctx.request.body.deviceId = deviceId
+        ctx.request.body.key = rsa.encode(iv + key)
+        ctx.request.body.sign = EncodeUtil.md5(ctx.request.body.deviceId + ctx.request.body.requestId + ctx.request.body.key + ctx.request.body.value).toString()
+        ctx.request.body.remark = 'mock request'
+        ctx.headers['content-type'] = 'application/x-www-form-urlencoded'
+      }
       const url = nodeURL.parse(api.mode.replace(/{/g, ':').replace(/}/g, ''), true)
       const params = util.params(api.url.replace(/{/g, ':').replace(/}/g, ''), mockURL)
       const pathname = pathToRegexp.compile(url.pathname)(params)
@@ -249,7 +297,7 @@ module.exports = class MockController {
           method: method,
           url: url.protocol + '//' + url.host + pathname,
           params: _.assign({}, url.query, query),
-          data: body,
+          data: ctx.request.body,
           timeout: 3000,
           headers: ctx.headers
         }).then(res => res.data)
@@ -274,6 +322,7 @@ module.exports = class MockController {
       if (apiData._res) { // 自定义响应 Code
         let _res = apiData._res
         ctx.status = _res.status || /* istanbul ignore next */ 200
+        ctx.status_message = _res.message || '请求异常'
         /* istanbul ignore else */
         if (_res.cookies) {
           for (let i in _res.cookies) {
@@ -301,7 +350,24 @@ module.exports = class MockController {
         .replace(/\u2028/g, '\\u2028')
         .replace(/\u2029/g, '\\u2029') // JSON parse vs eval fix. https://github.com/rack/rack-contrib/pull/37
     } else {
-      ctx.body = apiData
+      if (api.encode && des) {
+        if (ctx.request.header.referer) {
+          ctx.body = des.decode(apiData.value)
+        } else {
+          ctx.body = {}
+          ctx.body.result = des.encode(JSON.stringify(apiData)).toString()
+          ctx.body.requestId = ctx.request.body.requestId
+          ctx.body.deviceId = ctx.request.body.deviceId
+          ctx.body.remark = ctx.request.body.remark
+          ctx.body.resultCode = ctx.status || 200
+          ctx.body.resultMsg = ctx.status_message || '处理成功'
+          ctx.body.sign = rsa.sign(EncodeUtil.md5(ctx.body.deviceId + ctx.body.requestId + ctx.body.result).toString())
+
+          ctx.status = 200
+        }
+      } else {
+        ctx.body = apiData
+      }
     }
   }
 
@@ -366,7 +432,7 @@ module.exports = class MockController {
     }
 
     if (projectId) {
-      apis = await MockProxy.find({ project: projectId })
+      apis = await MockProxy.find({project: projectId})
     } else if (!_.isEmpty(ids)) {
       apis = await MockProxy.find({
         _id: {
@@ -387,7 +453,7 @@ module.exports = class MockController {
       zip.file(`${api.project.url}${api.url}.json`, api.mode)
     })
 
-    const content = await zip.generateAsync({ type: 'nodebuffer' })
+    const content = await zip.generateAsync({type: 'nodebuffer'})
 
     ctx.set('Content-disposition', 'attachment; filename=Easy-Mock-API.zip')
     ctx.body = content

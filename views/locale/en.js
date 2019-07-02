@@ -165,8 +165,8 @@ export default {
       download: 'Downlaod as zip file | Download',
       member: 'Member List',
       keyboards: [
-        { category: 'Navigation' },
-        { category: 'Action', list: ['Create new Mock', 'Add / Remove Work Station', 'Sync with Swagger'] }
+        {category: 'Navigation'},
+        {category: 'Action', list: ['Create new Mock', 'Add / Remove Work Station', 'Sync with Swagger']}
       ],
       columns: ['Description', 'Action'],
       action: ['Preview Mock', 'Edit Mock', 'Copy Mock Address', 'Copy', 'Delete'],
@@ -201,6 +201,7 @@ export default {
         title: ['Update Mock', 'Create New Mock'],
         action: ['Updae', 'Create'],
         autoClose: 'Auto Close',
+        encode: 'encode',
         control: ['Format', 'Preview', 'Close'],
         submit: {
           error: ['Mock data can\'t be null', 'Please check data definiation is correct.'],
@@ -213,8 +214,8 @@ export default {
     keyboardShort: {
       modalTitle: 'Keyboard Shortcuts',
       keyboards: [
-        { category: 'Global Navigations', list: ['Personal Projects', 'Team Projects', 'Work Station', 'Docs'] },
-        { category: 'Global Actions', list: ['Create New Project', 'Search'] }
+        {category: 'Global Navigations', list: ['Personal Projects', 'Team Projects', 'Work Station', 'Docs']},
+        {category: 'Global Actions', list: ['Create New Project', 'Search']}
       ]
     },
     layout: {

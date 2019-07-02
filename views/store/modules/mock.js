@@ -37,15 +37,16 @@ export default {
         if (res.data.success) {
           commit('SET_VALUE', res.data.data)
           state.pageIndex += 1
-          commit('SET_REQUEST_PARAMS', { pageIndex: state.pageIndex })
+          commit('SET_REQUEST_PARAMS', {pageIndex: state.pageIndex})
           return res.data.data
         }
       })
     },
-    CREATE ({commit, dispatch}, {route, mode, description, url, method}) {
+    CREATE ({commit, dispatch}, {route, mode, description, encode, url, method}) {
       return api.mock.create({
         data: {
           mode,
+          encode,
           url,
           method,
           description,

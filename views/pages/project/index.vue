@@ -61,7 +61,7 @@
                   </transition>
                 </div>
                 <h2>{{item.name}}</h2>
-                <div class="project-description">{{item.description}}</div>
+                <div class="project-descri  ption">{{item.description}}</div>
                 <div class="project-url">{{item.url}}</div>
                 <div class="project-member" v-if="page.type === 0">
                   <img :src="item.user.head_img">
