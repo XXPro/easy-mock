@@ -240,6 +240,7 @@ module.exports = class MockController {
 
     if (!api) {
       ctx.body = ctx.util.refail('接口不存在', 404)
+      return
     }
 
     let rsa, des
@@ -254,7 +255,6 @@ module.exports = class MockController {
         try {
           let encodeKey = rsa.decode(ctx.request.body.key)
           des = EncodeUtil.ThreeDes(encodeKey.substr(8), encodeKey.substr(0, 8))
-
         } catch (e) {
           ctx.body = ctx.util.refail('接口请求失败,请求参数解密失败')
           return
