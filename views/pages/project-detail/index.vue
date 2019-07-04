@@ -161,6 +161,14 @@ export default {
           }
         },
         { title: 'URL', width: 420, ellipsis: true, sortable: true, key: 'url' },
+        { title: '代理模式',
+          width: 100,
+          ellipsis: true,
+          key: 'proxy',
+          render: (h, params) => {
+            return (<i-button type={params.row.proxy ? 'success' : 'error'} onClick={this.proxyChange.bind(this, params.row)}>{params.row.proxy ? '开' : '关'}</i-button>)
+          }
+        },
         { title: this.$t('p.detail.columns[0]'), ellipsis: true, key: 'description' },
         {
           title: this.$t('p.detail.columns[1]'),
@@ -228,6 +236,12 @@ export default {
     }
   },
   methods: {
+    convertUrl (url) {
+      const newUrl = '/' + url
+      return newUrl === '/'
+        ? '/'
+        : newUrl.replace(/\/\//g, '/').replace(/\/$/, '')
+    },
     handleKeyTab () {
       this.pageName = this.pageName === this.$t('p.detail.nav[1]')
         ? this.$t('p.detail.nav[0]')
@@ -247,6 +261,28 @@ export default {
     },
     preview (mock) {
       window.open(this.baseUrl + mock.url + '#!method=' + mock.method)
+    },
+    proxyChange (mock) {
+      console.log(mock)
+      if (mock.proxyUrl && /^http(s)?/.test(mock.proxyUrl)) {
+        const mockUrl = this.convertUrl(mock.url)
+        let data = {
+          ...mock,
+          id: mock._id,
+          url: mockUrl
+        }
+        data.proxy = !data.proxy
+        api.mock.update({
+          data: data
+        }).then((res) => {
+          if (res.data.success) {
+            this.$Message.success(this.$t('p.detail.editor.submit.updateSuccess'))
+            mock.proxy = data.proxy
+          }
+        })
+      } else {
+        this.$Message.warning('未配置代理地址')
+      }
     },
     selectionChange (selection) {
       this.selection = selection

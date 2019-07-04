@@ -61,10 +61,16 @@ module.exports = class MockController {
     const projectId = ctx.checkBody('project_id').notEmpty().value
     const description = ctx.checkBody('description').notEmpty().value
     const encode = ctx.checkBody('encode').default(false).value
+    const proxy = ctx.checkBody('proxy').default(false).value
+    let proxyUrl
+    if (proxy) {
+      proxyUrl = ctx.checkBody('proxyUrl').notEmpty().match(/^http(s)?/, '代理地址 必须以 http 或者https 开头').value
+    } else {
+      proxyUrl = ctx.checkBody('proxyUrl').default('').value
+    }
     const url = ctx.checkBody('url').notEmpty().match(/^\/.*$/i, 'URL 必须以 / 开头').value
     const method = ctx.checkBody('method').notEmpty().toLow().in(['get', 'post', 'put', 'delete', 'patch']).value
 
-    console.log('encode', encode)
     if (ctx.errors) {
       ctx.body = ctx.util.refail(null, 10001, ctx.errors)
       return
@@ -93,6 +99,8 @@ module.exports = class MockController {
       description,
       method,
       encode,
+      proxy,
+      proxyUrl,
       url,
       mode
     })
@@ -166,7 +174,14 @@ module.exports = class MockController {
     const id = ctx.checkBody('id').notEmpty().value
     const mode = ctx.checkBody('mode').notEmpty().value
     const description = ctx.checkBody('description').notEmpty().value
-    const encode = ctx.checkBody('encode').notEmpty().value
+    const encode = ctx.checkBody('encode').default(false).value
+    const proxy = ctx.checkBody('proxy').default(false).value
+    let proxyUrl
+    if (proxy) {
+      proxyUrl = ctx.checkBody('proxyUrl').notEmpty().match(/^http(s)?/, '代理地址 必须以 http 或者https 开头').value
+    } else {
+      proxyUrl = ctx.checkBody('proxyUrl').default('').value
+    }
     const url = ctx.checkBody('url').notEmpty().match(/^\/.*$/i, 'URL 必须以 / 开头').value
     const method = ctx.checkBody('method').notEmpty().toLow().in(['get', 'post', 'put', 'delete', 'patch']).value
 
@@ -189,6 +204,8 @@ module.exports = class MockController {
     api.method = method
     api.description = description
     api.encode = encode
+    api.proxy = proxy
+    api.proxyUrl = proxyUrl
 
     const existMock = await MockProxy.findOne({
       _id: {$ne: api.id},
@@ -274,7 +291,7 @@ module.exports = class MockController {
       return options.template.call(options.context.currentContext, options)
     }
 
-    if (/^http(s)?/.test(api.mode)) { // 代理模式
+    if (/^http(s)?/.test(api.mode) || api.proxy) { // 代理模式
       if (ctx.request.header.referer) {
         let rangs = _.values('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
         let key = _.sampleSize(rangs, 24).join('')
@@ -292,9 +309,18 @@ module.exports = class MockController {
         ctx.request.body.remark = 'mock request'
         ctx.headers['content-type'] = 'application/x-www-form-urlencoded'
       }
-      const url = nodeURL.parse(api.mode.replace(/{/g, ':').replace(/}/g, ''), true)
+      const url = api.proxyUrl && /^http(s)?/.test(api.proxyUrl) ? nodeURL.parse(api.proxyUrl.replace(/{/g, ':').replace(/}/g, ''), true) : nodeURL.parse(api.mode.replace(/{/g, ':').replace(/}/g, ''), true)
       const params = util.params(api.url.replace(/{/g, ':').replace(/}/g, ''), mockURL)
       const pathname = pathToRegexp.compile(url.pathname)(params)
+      console.log(url.protocol + '//' + url.host + pathname)
+      console.log(typeof ctx.request.body)
+      if (api.encode) {
+        let params = []
+        for (let k in ctx.request.body) {
+          params.push(encodeURIComponent(k) + '=' + encodeURIComponent(ctx.request.body[k]))
+        }
+        ctx.request.body = params.join('&')
+      }
       try {
         apiData = await axios({
           method: method,
@@ -308,6 +334,7 @@ module.exports = class MockController {
         ctx.body = ctx.util.refail(error.message || '接口请求失败')
         return
       }
+      console.log(apiData)
     } else {
       const vm = new VM({
         timeout: 1000,
@@ -356,6 +383,8 @@ module.exports = class MockController {
       if (api.encode && des) {
         if (ctx.request.header.referer) {
           ctx.body = des.decode(apiData.value)
+        } else if (/^http(s)?/.test(api.mode) || api.proxy) {
+          ctx.body = apiData
         } else {
           ctx.body = {}
           ctx.body.result = des.encode(JSON.stringify(apiData)).toString()
@@ -365,7 +394,7 @@ module.exports = class MockController {
           ctx.body.resultCode = ctx.status || 200
           ctx.body.resultMsg = ctx.status_message || '处理成功'
           ctx.body.sign = rsa.sign(EncodeUtil.md5(ctx.body.deviceId + ctx.body.requestId + ctx.body.result).toString())
-
+          ctx.body.time = new Date().getTime()
           ctx.status = 200
         }
       } else {

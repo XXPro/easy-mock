@@ -40,6 +40,8 @@ module.exports = {
       method: 'post',
       url: '/upload',
       encode: false,
+      proxy: false,
+      proxyUrl: '',
       mode: example.post
     },
     {
@@ -47,6 +49,8 @@ module.exports = {
       method: 'get',
       url: '/query',
       encode: false,
+      proxy: false,
+      proxyUrl: '',
       mode: example.get
     },
     {
@@ -54,6 +58,8 @@ module.exports = {
       method: 'get',
       url: '/restful/:id/list',
       encode: false,
+      proxy: false,
+      proxyUrl: '',
       mode: example.base
     },
     {
@@ -61,6 +67,8 @@ module.exports = {
       method: 'get',
       url: '/proxy',
       encode: false,
+      proxy: false,
+      proxyUrl: '',
       mode: 'https://api.m.sohu.com/autonews/pool/?n=%E6%96%B0%E9%97%BB&s=1'
     },
     {
@@ -74,6 +82,8 @@ module.exports = {
       method: 'get',
       url: '/',
       encode: true,
+      proxy: false,
+      proxyUrl: '',
       mode: example.res
     }
   ]

@@ -2,7 +2,7 @@
 
 const fs = require('fs')
 const path = require('path')
-const { URL } = require('url')
+const {URL} = require('url')
 const axios = require('axios')
 const moment = require('moment')
 const mkdirp = require('mkdirp')
@@ -12,7 +12,7 @@ const config = require('config')
 
 const uploadConf = config.get('upload')
 const unsplashClientId = config.get('unsplashClientId')
-const unsplashCache = LRU({ max: 1, maxAge: 1000 * 60 * 60 })
+const unsplashCache = LRU({max: 1, maxAge: 1000 * 60 * 60})
 
 module.exports = class UtilController {
   /**
@@ -34,8 +34,8 @@ module.exports = class UtilController {
     try {
       const res = await axios.get(wallpaperAPI)
       ctx.body = unsplashClientId /* istanbul ignore next */
-        ? ctx.util.resuccess({ type: 'unsplash', data: res.data })
-        : ctx.util.resuccess({ type: 'bing', data: res.data.images })
+        ? ctx.util.resuccess({type: 'unsplash', data: res.data})
+        : ctx.util.resuccess({type: 'bing', data: res.data.images})
     } catch (error) {
       ctx.body = ctx.util.resuccess({
         type: 'bing',

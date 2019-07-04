@@ -2,9 +2,9 @@
 
 const _ = require('lodash')
 
-const { Project } = require('../models')
+const {Project} = require('../models')
 const ft = require('../models/fields_table')
-const { GroupProxy, UserGroupProxy, UserProjectProxy } = require('../proxy')
+const {GroupProxy, UserGroupProxy, UserProjectProxy} = require('../proxy')
 
 module.exports = class GroupController {
   /**
@@ -28,7 +28,7 @@ module.exports = class GroupController {
       return
     }
 
-    await GroupProxy.newAndSave({ user: uid, name })
+    await GroupProxy.newAndSave({user: uid, name})
 
     ctx.body = ctx.util.resuccess()
   }
@@ -44,10 +44,10 @@ module.exports = class GroupController {
     let groups
 
     if (keywords) {
-      groups = await GroupProxy.find({ name: keywords })
+      groups = await GroupProxy.find({name: keywords})
       groups = groups.map(o => _.pick(o, ft.group))
     } else {
-      groups = await UserGroupProxy.find({ user: uid })
+      groups = await UserGroupProxy.find({user: uid})
       groups = groups.map(o => _.pick(o.group, ft.group))
     }
 
@@ -68,7 +68,7 @@ module.exports = class GroupController {
       return
     }
 
-    await UserGroupProxy.newAndSave({ user: uid, group: id })
+    await UserGroupProxy.newAndSave({user: uid, group: id})
 
     ctx.body = ctx.util.resuccess()
   }
@@ -87,8 +87,8 @@ module.exports = class GroupController {
       return
     }
 
-    const group = await GroupProxy.findOne({ _id: id, user: uid })
-    const projects = await Project.find({ group: id })
+    const group = await GroupProxy.findOne({_id: id, user: uid})
+    const projects = await Project.find({group: id})
     const projectIds = projects.map(project => project.id)
 
     if (group) { // 团队创建者删除团队
@@ -96,11 +96,11 @@ module.exports = class GroupController {
         ctx.body = ctx.util.refail('解散团队前请先删除该团队下所有的项目')
         return
       }
-      await GroupProxy.del({ _id: id })
-      await UserGroupProxy.del({ group: id })
+      await GroupProxy.del({_id: id})
+      await UserGroupProxy.del({group: id})
     } else { // 团队成员离开团队
-      await UserGroupProxy.del({ user: uid, group: id })
-      await UserProjectProxy.del({ user: uid, project: { $in: projectIds } })
+      await UserGroupProxy.del({user: uid, group: id})
+      await UserProjectProxy.del({user: uid, project: {$in: projectIds}})
     }
 
     ctx.body = ctx.util.resuccess()
@@ -121,7 +121,7 @@ module.exports = class GroupController {
       return
     }
 
-    let group = await GroupProxy.findOne({ _id: id, user: uid })
+    let group = await GroupProxy.findOne({_id: id, user: uid})
 
     if (!group) {
       ctx.body = ctx.util.refail('非团队创建者无法更新团队信息')
@@ -135,7 +135,7 @@ module.exports = class GroupController {
       return
     }
 
-    await GroupProxy.updateById(id, { name })
+    await GroupProxy.updateById(id, {name})
 
     ctx.body = ctx.util.resuccess()
   }

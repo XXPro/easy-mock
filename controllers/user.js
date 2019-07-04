@@ -8,7 +8,7 @@ const util = require('../util')
 const ldapUtil = require('../util/ldap')
 const mockUtil = require('../util/mock')
 const ft = require('../models/fields_table')
-const { UserProxy, ProjectProxy, MockProxy } = require('../proxy')
+const {UserProxy, ProjectProxy, MockProxy} = require('../proxy')
 
 const jwtSecret = config.get('jwt.secret')
 const jwtExpire = config.get('jwt.expire')
@@ -29,6 +29,8 @@ async function createUser (name, password) {
         description: item.desc,
         method: item.method,
         encode: item.encode,
+        proxy: item.proxy,
+        proxyUrl: item.proxyUrl,
         url: item.url,
         mode: item.mode
       }))
@@ -110,7 +112,7 @@ module.exports = class UserController {
       return
     }
 
-    user.token = jwt.sign({ id: user.id }, jwtSecret, { expiresIn: jwtExpire })
+    user.token = jwt.sign({id: user.id}, jwtSecret, {expiresIn: jwtExpire})
 
     ctx.body = ctx.util.resuccess(_.pick(user, ft.user))
   }
@@ -123,7 +125,7 @@ module.exports = class UserController {
   static async update (ctx) {
     const password = ctx.checkBody('password').empty().len(6, 20).value
     const nickName = ctx.checkBody('nick_name').empty().len(2, 20).value
-    const headImg = ctx.checkBody('head_img').empty().isUrl(null, { allow_underscores: true, allow_protocol_relative_urls: true }).value
+    const headImg = ctx.checkBody('head_img').empty().isUrl(null, {allow_underscores: true, allow_protocol_relative_urls: true}).value
 
     if (ctx.errors) {
       ctx.body = ctx.util.refail(null, 10001, ctx.errors)

@@ -6,19 +6,19 @@ const config = require('config')
 const util = require('../util')
 const ft = require('../models/fields_table')
 const SwaggerUtil = require('../util/swagger')
-const { MockProxy, ProjectProxy, UserProjectProxy, UserGroupProxy } = require('../proxy')
+const {MockProxy, ProjectProxy, UserProjectProxy, UserGroupProxy} = require('../proxy')
 
 const redis = util.getRedis()
 const defPageSize = config.get('pageSize')
 
 async function checkByProjectId (projectId, uid, creater) {
-  const project = await ProjectProxy.findOne({ _id: projectId })
+  const project = await ProjectProxy.findOne({_id: projectId})
 
   if (project) {
     const group = project.group
     if (group) {
       if (creater && group.user.toString() !== uid) return '无权限操作'
-      const userGroup = await UserGroupProxy.findOne({ user: uid, group: group })
+      const userGroup = await UserGroupProxy.findOne({user: uid, group: group})
       if (!userGroup) return '无权限操作'
     } else if (project.user.id !== uid) {
       if (creater) return '无权限操作'
@@ -44,8 +44,8 @@ module.exports = class ProjectController {
     const name = ctx.checkBody('name').notEmpty().value
     const memberIds = ctx.checkBody('members').empty().type('array').value
     const url = ctx.checkBody('url').notEmpty().match(/^\/.*$/i, 'URL 必须以 / 开头').value
-    const swaggerUrl = ctx.checkBody('swagger_url').empty().isUrl(null, { allow_underscores: true, require_protocol: true }).value
-    const findQuery = { $or: [{ name }, { url }] }
+    const swaggerUrl = ctx.checkBody('swagger_url').empty().isUrl(null, {allow_underscores: true, require_protocol: true}).value
+    const findQuery = {$or: [{name}, {url}]}
     const saveQuery = {
       name,
       url,
@@ -67,7 +67,7 @@ module.exports = class ProjectController {
       findQuery.group = group
       saveQuery.group = group
 
-      const userGroup = await UserGroupProxy.findOne({ user: uid, group: group })
+      const userGroup = await UserGroupProxy.findOne({user: uid, group: group})
 
       if (!userGroup) {
         ctx.body = ctx.util.refail('无权限操作')
@@ -118,7 +118,7 @@ module.exports = class ProjectController {
       return
     }
 
-    const apis = await MockProxy.find({ project: id })
+    const apis = await MockProxy.find({project: id})
 
     if (apis.length === 0) {
       ctx.body = ctx.util.refail('该项目无接口可复制')
@@ -127,7 +127,7 @@ module.exports = class ProjectController {
 
     const newUrl = project.url + '_copy'
     const newName = project.name + '_copy'
-    const query = { user: uid, $or: [{ name: newName }, { url: newUrl }] }
+    const query = {user: uid, $or: [{name: newName}, {url: newUrl}]}
     const checkProject = await ProjectProxy.findOne(query)
 
     if (checkProject) {
@@ -150,6 +150,8 @@ module.exports = class ProjectController {
       description: item.description,
       method: item.method,
       encode: item.encode,
+      proxy: item.proxy,
+      proxyUrl: item.proxyUrl,
       url: item.url,
       mode: item.mode
     }))
@@ -168,7 +170,7 @@ module.exports = class ProjectController {
     const uid = ctx.state.user.id
     const group = ctx.query.group
     const keywords = ctx.query.keywords
-    const type = ctx.checkQuery('type').empty().toLow().in([ 'workbench' ]).value
+    const type = ctx.checkQuery('type').empty().toLow().in(['workbench']).value
     const pageIndex = ctx.checkQuery('page_index').empty().toInt().gt(0).default(1).value
     const pageSize = ctx.checkQuery('page_size').empty().toInt().gt(0).default(defPageSize).value
     const filterByAuthor = ctx.checkQuery('filter_by_author').empty().toInt().default(0).value // 0：全部、1：我创建的、2：我加入的
@@ -187,39 +189,39 @@ module.exports = class ProjectController {
     }
 
     if (group) {
-      const userGroup = await UserGroupProxy.findOne({ user: uid, group: group })
+      const userGroup = await UserGroupProxy.findOne({user: uid, group: group})
       if (!userGroup) {
         ctx.body = ctx.util.resuccess([])
         return
       }
-      baseWhere = [{ group }]
+      baseWhere = [{group}]
     } else {
       if (filterByAuthor === 0) {
         baseWhere = [
-          { user: uid },
-          { members: { $elemMatch: { $eq: uid } } }
+          {user: uid},
+          {members: {$elemMatch: {$eq: uid}}}
         ]
       } else if (filterByAuthor === 1) {
-        baseWhere = [{ user: uid }]
+        baseWhere = [{user: uid}]
       } else {
         baseWhere = [
-          { members: { $elemMatch: { $eq: uid } } }
+          {members: {$elemMatch: {$eq: uid}}}
         ]
       }
     }
 
-    let where = { $or: baseWhere }
+    let where = {$or: baseWhere}
 
     if (keywords) {
       const keyExp = new RegExp(keywords, 'i')
       where = {
         $and: [
-          { $or: baseWhere },
+          {$or: baseWhere},
           {
             $or: [
-              { url: keyExp },
-              { description: keyExp },
-              { name: keyExp }]
+              {url: keyExp},
+              {description: keyExp},
+              {name: keyExp}]
           }
         ]
       }
@@ -233,7 +235,7 @@ module.exports = class ProjectController {
         })
         projects = projects.map(item => item.project)
         projects = await ProjectProxy.find(uid, {
-          _id: { $in: projects }
+          _id: {$in: projects}
         })
         break
       default:
@@ -265,7 +267,7 @@ module.exports = class ProjectController {
       return
     }
 
-    const userProjectDocs = await UserProjectProxy.findOne({ _id: id, user: uid })
+    const userProjectDocs = await UserProjectProxy.findOne({_id: id, user: uid})
 
     if (!userProjectDocs) {
       ctx.body = ctx.util.refail('无权限操作')
@@ -291,7 +293,7 @@ module.exports = class ProjectController {
     const description = ctx.request.body.description || ''
     const memberIds = ctx.checkBody('members').empty().type('array').value
     const url = ctx.checkBody('url').notEmpty().match(/^\/.*$/i, 'URL 必须以 / 开头').value
-    const swaggerUrl = ctx.checkBody('swagger_url').empty().isUrl(null, { allow_underscores: true, require_protocol: true }).value
+    const swaggerUrl = ctx.checkBody('swagger_url').empty().isUrl(null, {allow_underscores: true, require_protocol: true}).value
 
     if (ctx.errors) {
       ctx.body = ctx.util.refail(null, 10001, ctx.errors)
@@ -315,7 +317,7 @@ module.exports = class ProjectController {
     if (diffIds.length > 0) {
       await UserProjectProxy.del({
         project: project.id,
-        user: { $in: diffIds }
+        user: {$in: diffIds}
       })
     }
 
@@ -335,7 +337,7 @@ module.exports = class ProjectController {
     project.description = description
 
     const existQuery = {
-      _id: { $ne: project.id },
+      _id: {$ne: project.id},
       $or: [{
         url: project.url
       }, {

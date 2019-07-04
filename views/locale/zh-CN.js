@@ -202,6 +202,8 @@ export default {
         action: ['更新', '创建'],
         autoClose: '自动关闭',
         encode: '加密接口',
+        proxy: '代理模式',
+        proxyUrl: '代理地址',
         control: ['格式化', '预览', '关闭'],
         submit: {
           error: ['接口数据不能为空。', '请检查数据定义是否符合要求。'],

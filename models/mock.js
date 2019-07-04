@@ -12,6 +12,8 @@ const schema = new Schema({
   description: String,
   mode: String,
   encode: Boolean,
+  proxy: Boolean,
+  proxyUrl: String,
   url: String,
   method: String,
   parameters: String,
@@ -22,6 +24,6 @@ const schema = new Schema({
   }
 })
 
-schema.index({ project: 1, create_at: -1 })
+schema.index({project: 1, create_at: -1})
 
 module.exports = mongoose.model('Mock', schema)

@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-import { version } from '../../package.json'
+import {version} from '../../package.json'
 import user from './modules/user'
 import app from './modules/app'
 import mock from './modules/mock'

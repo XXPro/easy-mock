@@ -202,6 +202,8 @@ export default {
         action: ['Updae', 'Create'],
         autoClose: 'Auto Close',
         encode: 'encode',
+        proxy: 'proxy Request',
+        proxyUrl: 'proxy Request Url',
         control: ['Format', 'Preview', 'Close'],
         submit: {
           error: ['Mock data can\'t be null', 'Please check data definiation is correct.'],

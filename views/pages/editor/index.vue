@@ -25,6 +25,12 @@
             <Form-item :label="$t('p.detail.editor.encode')">
               <i-switch v-model="temp.encode"></i-switch>
             </Form-item>
+            <Form-item :label="$t('p.detail.editor.proxy')">
+              <i-switch v-model="temp.proxy"></i-switch>
+            </Form-item>
+            <Form-item :label="$t('p.detail.editor.proxyUrl')" v-if="temp.proxy">
+              <i-input v-model="temp.proxyUrl"></i-input>
+            </Form-item>
             <Form-item :label="$t('p.detail.editor.autoClose')" v-if="isEdit">
               <i-switch v-model="autoClose"></i-switch>
             </Form-item>
@@ -85,6 +91,8 @@
           mode: '{"data": {}}',
           method: 'get',
           encode: false,
+          proxy: false,
+          proxyUrl: '',
           description: ''
         }
       }
@@ -138,6 +146,8 @@
         this.temp.method = this.mockData.method
         this.temp.description = this.mockData.description
         this.temp.encode = this.mockData.encode
+        this.temp.proxy = this.mockData.proxy
+        this.temp.proxyUrl = this.mockData.proxyUrl
       }
 
       this.$nextTick(() => {

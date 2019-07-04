@@ -3,9 +3,9 @@
 const moment = require('moment')
 const LRU = require('lru-cache')
 
-const { Project, Mock, MockCount, User } = require('../models')
+const {Project, Mock, MockCount, User} = require('../models')
 
-const cache = LRU({ max: 1, maxAge: 1000 * 60 * 60 })
+const cache = LRU({max: 1, maxAge: 1000 * 60 * 60})
 
 /**
  * 获取 Mock 使用次数
@@ -13,8 +13,8 @@ const cache = LRU({ max: 1, maxAge: 1000 * 60 * 60 })
 
 function getUseTotalCount (query = {}) {
   return MockCount.aggregate(
-    { $match: query },
-    { $group: { _id: null, total: { $sum: '$count' } } }
+    {$match: query},
+    {$group: {_id: null, total: {$sum: '$count'}}}
   ).then(data => data[0] ? /* istanbul ignore next */ data[0].total : 0)
 }
 
