@@ -42,13 +42,15 @@ export default {
         }
       })
     },
-    CREATE ({commit, dispatch}, {route, mode, description, encode, proxy, proxyUrl, url, method}) {
+    CREATE ({commit, dispatch}, {route, mode, description, encode, proxy, proxyUrl, body, header, url, method}) {
       return api.mock.create({
         data: {
           mode,
           encode,
           proxy,
           proxyUrl,
+          body,
+          header,
           url,
           method,
           description,

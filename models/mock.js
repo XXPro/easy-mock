@@ -14,6 +14,8 @@ const schema = new Schema({
   encode: Boolean,
   proxy: Boolean,
   proxyUrl: String,
+  body: String,
+  header: String,
   url: String,
   method: String,
   parameters: String,

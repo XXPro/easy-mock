@@ -31,6 +31,8 @@ async function createUser (name, password) {
         encode: item.encode,
         proxy: item.proxy,
         proxyUrl: item.proxyUrl,
+        body: item.body,
+        header: item.header,
         url: item.url,
         mode: item.mode
       }))

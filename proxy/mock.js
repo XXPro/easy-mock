@@ -30,6 +30,8 @@ module.exports = class MockProxy {
         encode: mock.encode,
         proxy: mock.proxy,
         proxyUrl: mock.proxyUrl,
+        body: mock.body,
+        header: mock.header,
         parameters: mock.parameters,
         description: mock.description,
         response_model: mock.response_model

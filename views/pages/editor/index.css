@@ -9,7 +9,7 @@
   z-index: 999;
   display: flex;
   overflow: hidden;
-
+  background: #fff;
   & > div {
     height: 100%;
     flex: 1;

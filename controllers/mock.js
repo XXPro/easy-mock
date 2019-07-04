@@ -68,6 +68,8 @@ module.exports = class MockController {
     } else {
       proxyUrl = ctx.checkBody('proxyUrl').default('').value
     }
+    const body = ctx.checkBody('body').default('').value
+    const header = ctx.checkBody('header').default('').value
     const url = ctx.checkBody('url').notEmpty().match(/^\/.*$/i, 'URL 必须以 / 开头').value
     const method = ctx.checkBody('method').notEmpty().toLow().in(['get', 'post', 'put', 'delete', 'patch']).value
 
@@ -101,6 +103,8 @@ module.exports = class MockController {
       encode,
       proxy,
       proxyUrl,
+      body,
+      header,
       url,
       mode
     })
@@ -158,9 +162,10 @@ module.exports = class MockController {
       project.user = _.pick(project.user, ft.user)
       project = _.pick(project, ['user'].concat(ft.project))
     }
-
+    console.log(mocks)
     mocks = mocks.map(o => _.pick(o, ft.mock))
 
+    console.log('after', mocks)
     ctx.body = ctx.util.resuccess({project: project || {}, mocks})
   }
 
@@ -182,6 +187,9 @@ module.exports = class MockController {
     } else {
       proxyUrl = ctx.checkBody('proxyUrl').default('').value
     }
+
+    const body = ctx.checkBody('body').default('').value
+    const header = ctx.checkBody('header').default('').value
     const url = ctx.checkBody('url').notEmpty().match(/^\/.*$/i, 'URL 必须以 / 开头').value
     const method = ctx.checkBody('method').notEmpty().toLow().in(['get', 'post', 'put', 'delete', 'patch']).value
 
@@ -206,7 +214,10 @@ module.exports = class MockController {
     api.encode = encode
     api.proxy = proxy
     api.proxyUrl = proxyUrl
+    api.body = body
+    api.header = header
 
+    console.log(api)
     const existMock = await MockProxy.findOne({
       _id: {$ne: api.id},
       project: project.id,

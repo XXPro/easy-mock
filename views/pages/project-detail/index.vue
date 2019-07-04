@@ -260,7 +260,24 @@ export default {
       })
     },
     preview (mock) {
-      window.open(this.baseUrl + mock.url + '#!method=' + mock.method)
+      console.log(mock)
+      let params = []
+      params.push(encodeURIComponent('method') + '=' + encodeURIComponent(mock.method))
+      if (mock.body) {
+        params.push(encodeURIComponent('body') + '=' + encodeURIComponent(JSON.stringify(JSON.parse(mock.body), null, '\t')))
+      }
+      if (mock.header) {
+        try {
+          let headerObj = JSON.parse(mock.header)
+          let header = []
+          for (let k in headerObj) {
+            header.push({key: k, value: headerObj[k]})
+          }
+          params.push(encodeURIComponent('headers') + '=' + encodeURIComponent(JSON.stringify(header)))
+        } catch (e) {
+        }
+      }
+      window.open(this.baseUrl + mock.url + '#!' + params.join('&'))
     },
     proxyChange (mock) {
       if (mock.proxyUrl && /^http(s)?/.test(mock.proxyUrl)) {

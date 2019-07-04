@@ -1,7 +1,12 @@
 <template>
   <div class="em-editor">
     <div class="em-editor__editor">
+      <h2>返回参数</h2>
       <div ref="codeEditor"></div>
+      <h2>请求参数</h2>
+      <div ref="bodyEditor"></div>
+      <h2>请求头</h2>
+      <div ref="headerEditor"></div>
     </div>
     <div class="panel-info">
       <em-spots :size="10"></em-spots>
@@ -78,6 +83,8 @@
     data () {
       return {
         codeEditor: null,
+        bodyEditor: null,
+        headerEditor: null,
         autoClose: true,
         methods: [
           {label: 'get', value: 'get'},
@@ -93,6 +100,8 @@
           encode: false,
           proxy: false,
           proxyUrl: '',
+          body: '',
+          header: '',
           description: ''
         }
       }
@@ -130,8 +139,39 @@
       this.codeEditor.setOption('enableSnippets', true)
       this.codeEditor.clearSelection()
       this.codeEditor.getSession().setUseWorker(false)
-      this.codeEditor.on('change', this.onChange)
       this.codeEditor.commands.addCommand({
+        name: 'save',
+        bindKey: {win: 'Ctrl-S', mac: 'Command-S'},
+        exec: () => {
+          this.submit()
+        }
+      })
+      this.bodyEditor = ace.edit(this.$refs.bodyEditor)
+      this.bodyEditor.getSession().setMode('ace/mode/javascript')
+      this.bodyEditor.setTheme('ace/theme/monokai')
+      this.bodyEditor.setOption('tabSize', 2)
+      this.bodyEditor.setOption('fontSize', 15)
+      this.bodyEditor.setOption('enableLiveAutocompletion', true)
+      this.bodyEditor.setOption('enableSnippets', true)
+      this.bodyEditor.clearSelection()
+      this.bodyEditor.getSession().setUseWorker(false)
+      this.bodyEditor.commands.addCommand({
+        name: 'save',
+        bindKey: {win: 'Ctrl-S', mac: 'Command-S'},
+        exec: () => {
+          this.submit()
+        }
+      })
+      this.headerEditor = ace.edit(this.$refs.headerEditor)
+      this.headerEditor.getSession().setMode('ace/mode/javascript')
+      this.headerEditor.setTheme('ace/theme/monokai')
+      this.headerEditor.setOption('tabSize', 2)
+      this.headerEditor.setOption('fontSize', 15)
+      this.headerEditor.setOption('enableLiveAutocompletion', true)
+      this.headerEditor.setOption('enableSnippets', true)
+      this.headerEditor.clearSelection()
+      this.headerEditor.getSession().setUseWorker(false)
+      this.headerEditor.commands.addCommand({
         name: 'save',
         bindKey: {win: 'Ctrl-S', mac: 'Command-S'},
         exec: () => {
@@ -147,10 +187,18 @@
         this.temp.encode = this.mockData.encode
         this.temp.proxy = this.mockData.proxy
         this.temp.proxyUrl = this.mockData.proxyUrl
+        this.temp.body = this.mockData.body
+        this.temp.header = this.mockData.header
       }
 
       this.$nextTick(() => {
+        console.log('next', this.temp)
         this.codeEditor.setValue(this.temp.mode)
+        this.bodyEditor.setValue(this.temp.body)
+        this.headerEditor.setValue(this.temp.header)
+        this.headerEditor.on('change', this.onChange)
+        this.codeEditor.on('change', this.onChange)
+        this.bodyEditor.on('change', this.onChange)
         this.format()
       })
     },
@@ -167,9 +215,17 @@
           ? context
           : jsBeautify.js_beautify(context, {indent_size: 2})
         this.codeEditor.setValue(code)
+        const body = this.bodyEditor.getValue()
+        let bodycode = jsBeautify.js_beautify(body, {indent_size: 2})
+        this.bodyEditor.setValue(bodycode)
+        const header = this.headerEditor.getValue()
+        let headercode = jsBeautify.js_beautify(header, {indent_size: 2})
+        this.headerEditor.setValue(headercode)
       },
       onChange () {
         this.temp.mode = this.codeEditor.getValue()
+        this.temp.body = this.bodyEditor.getValue()
+        this.temp.header = this.headerEditor.getValue()
       },
       close () {
         this.$store.commit('mock/SET_EDITOR_DATA', {mock: null, baseUrl: ''})
@@ -192,6 +248,7 @@
           }
         }
 
+        console.log(this.temp)
         if (this.isEdit) {
           api.mock.update({
             data: {
@@ -221,7 +278,23 @@
         }
       },
       preview () {
-        window.open(this.baseUrl + this.mockData.url + '#!method=' + this.mockData.method)
+        let params = []
+        params.push(encodeURIComponent('method') + '=' + encodeURIComponent(this.mockData.method))
+        if (this.mockData.body) {
+          params.push(encodeURIComponent('body') + '=' + encodeURIComponent(JSON.stringify(JSON.parse(this.mockData.body), null, '\t')))
+        }
+        if (this.mockData.header) {
+          try {
+            let headerObj = JSON.parse(this.mockData.header)
+            let header = []
+            for (let k in headerObj) {
+              header.push({key: k, value: headerObj[k]})
+            }
+            params.push(encodeURIComponent('headers') + '=' + encodeURIComponent(JSON.stringify(header)))
+          } catch (e) {
+          }
+        }
+        window.open(this.baseUrl + this.mockData.url + '#!' + params.join('&'))
       }
     }
   }
