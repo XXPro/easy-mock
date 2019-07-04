@@ -263,7 +263,6 @@ export default {
       window.open(this.baseUrl + mock.url + '#!method=' + mock.method)
     },
     proxyChange (mock) {
-      console.log(mock)
       if (mock.proxyUrl && /^http(s)?/.test(mock.proxyUrl)) {
         const mockUrl = this.convertUrl(mock.url)
         let data = {

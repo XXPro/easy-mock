@@ -138,7 +138,6 @@
           this.submit()
         }
       })
-      console.log('mockData', this.mockData)
       if (this.isEdit) {
         this.autoClose = true
         this.temp.url = this.mockData.url.slice(1) // remove /
@@ -178,8 +177,6 @@
       },
       submit () {
         const mockUrl = this.convertUrl(this.temp.url)
-
-        console.log('temp', this.temp)
         try {
           const value = (new Function(`return ${this.temp.mode}`))() // eslint-disable-line
           if (!value) {

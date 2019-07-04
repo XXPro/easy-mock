@@ -298,22 +298,20 @@ module.exports = class MockController {
         let iv = _.sampleSize(rangs, 8).join('')
         des = EncodeUtil.ThreeDes(key, iv)
         let requestId = _.sampleSize(rangs, 6).join('') + new Date().getTime()
-        let deviceId = Vue.ls.get('deviceId') || 'TEST' + _.sampleSize(rangs, 14).join('')
-        Vue.ls.set('deviceId', deviceId)
-
+        let deviceId = 'MOCK00000000000001'
+        ctx.request.body = {}
         ctx.request.body.value = des.encode(JSON.stringify(body))
         ctx.request.body.requestId = requestId
         ctx.request.body.deviceId = deviceId
         ctx.request.body.key = rsa.encode(iv + key)
-        ctx.request.body.sign = EncodeUtil.md5(ctx.request.body.deviceId + ctx.request.body.requestId + ctx.request.body.key + ctx.request.body.value).toString()
+        ctx.request.body.sign = rsa.encode(EncodeUtil.md5(ctx.request.body.deviceId + ctx.request.body.requestId + ctx.request.body.key + ctx.request.body.value).toString())
         ctx.request.body.remark = 'mock request'
         ctx.headers['content-type'] = 'application/x-www-form-urlencoded'
       }
       const url = api.proxyUrl && /^http(s)?/.test(api.proxyUrl) ? nodeURL.parse(api.proxyUrl.replace(/{/g, ':').replace(/}/g, ''), true) : nodeURL.parse(api.mode.replace(/{/g, ':').replace(/}/g, ''), true)
       const params = util.params(api.url.replace(/{/g, ':').replace(/}/g, ''), mockURL)
       const pathname = pathToRegexp.compile(url.pathname)(params)
-      console.log(url.protocol + '//' + url.host + pathname)
-      console.log(typeof ctx.request.body)
+      ctx.headers.host = url.host
       if (api.encode) {
         let params = []
         for (let k in ctx.request.body) {
@@ -382,7 +380,13 @@ module.exports = class MockController {
     } else {
       if (api.encode && des) {
         if (ctx.request.header.referer) {
-          ctx.body = des.decode(apiData.value)
+          ctx.body = des.decode(apiData.result)
+          if (typeof ctx.body === 'string' && (ctx.body.startsWith('{') || ctx.body.startsWith('['))) {
+            try {
+              ctx.body = JSON.parse(ctx.body)
+            } catch (e) {
+            }
+          }
         } else if (/^http(s)?/.test(api.mode) || api.proxy) {
           ctx.body = apiData
         } else {
