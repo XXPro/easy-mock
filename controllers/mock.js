@@ -325,7 +325,7 @@ module.exports = class MockController {
           url: url.protocol + '//' + url.host + pathname,
           params: _.assign({}, url.query, query),
           data: ctx.request.body,
-          timeout: 3000,
+          timeout: 6000,
           headers: ctx.headers
         }).then(res => res.data)
       } catch (error) {
