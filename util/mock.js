@@ -78,12 +78,14 @@ module.exports = {
       mode: example.random
     },
     {
-      desc: '自定义响应的 mock',
+      desc: '自定义响应的 mock,带参数和 请求头',
       method: 'get',
       url: '/',
       encode: true,
       proxy: false,
       proxyUrl: '',
+      body: JSON.stringify({}),
+      header: JSON.stringify({Authorization: 'Basic YmQxYzBhNzgzY2NkZDFjOWI5ZTQ6MWE5MDMwZmJjYTQ3YTViMmMyOGU5MmYxOTA1MGJiNzc4MjRiNWFkMQ=='}),
       mode: example.res
     }
   ]
