@@ -340,7 +340,11 @@ module.exports = class MockController {
           headers: ctx.headers
         }).then(res => res.data)
       } catch (error) {
-        ctx.body = ctx.util.refail(error.message || '接口请求失败')
+        if (error.response.data) {
+          ctx.body = error.response.data
+        } else {
+          ctx.body = ctx.util.refail(error.message || '接口请求失败')
+        }
         return
       }
       console.log(apiData)
