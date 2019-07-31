@@ -322,6 +322,7 @@ module.exports = class MockController {
       const url = api.proxyUrl && /^http(s)?/.test(api.proxyUrl) ? nodeURL.parse(api.proxyUrl.replace(/{/g, ':').replace(/}/g, ''), true) : nodeURL.parse(api.mode.replace(/{/g, ':').replace(/}/g, ''), true)
       const params = util.params(api.url.replace(/{/g, ':').replace(/}/g, ''), mockURL)
       const pathname = pathToRegexp.compile(url.pathname)(params)
+      ctx.set('proxyUrl', url.href)
       ctx.headers.host = url.host
       if (api.encode) {
         let params = []
@@ -340,7 +341,7 @@ module.exports = class MockController {
           headers: ctx.headers
         }).then(res => res.data)
       } catch (error) {
-        if (error.response.data) {
+        if (error.response && error.response.data) {
           ctx.body = error.response.data
         } else {
           ctx.body = ctx.util.refail(error.message || '接口请求失败')
