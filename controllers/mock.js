@@ -348,7 +348,6 @@ module.exports = class MockController {
         }
         return
       }
-      console.log(apiData)
     } else {
       const vm = new VM({
         timeout: 1000,
@@ -382,7 +381,7 @@ module.exports = class MockController {
           }
         }
         /* istanbul ignore next */
-        if (_res.status && parseInt(_res.status, 10) !== 200 && _res.data) apiData = _res.data
+        if (api.proxy_res.data) apiData = _res.data
         delete apiData['_res']
       }
     }
