@@ -381,7 +381,7 @@ module.exports = class MockController {
           }
         }
         /* istanbul ignore next */
-        if (api.proxy_res.data) apiData = _res.data
+        if (_res.data) apiData = _res.data
         delete apiData['_res']
       }
     }
