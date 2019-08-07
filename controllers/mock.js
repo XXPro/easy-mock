@@ -303,7 +303,7 @@ module.exports = class MockController {
     }
 
     if (/^http(s)?/.test(api.mode) || api.proxy) { // 代理模式
-      if (ctx.request.header.referer) {
+      if (ctx.request.header.referer && api.encode) {
         let rangs = _.values('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789')
         let key = _.sampleSize(rangs, 24).join('')
         let iv = _.sampleSize(rangs, 8).join('')
