@@ -13,6 +13,7 @@ table {
 
 .em-container {
   padding: 0 var(--base-padding);
-  max-width: var(--body-width);
+  min-width: 1024px;
+  max-width: 100%;
   margin: auto;
 }
