@@ -248,7 +248,6 @@
           }
         }
 
-        console.log(this.temp)
         if (this.isEdit) {
           api.mock.update({
             data: {

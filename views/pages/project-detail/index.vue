@@ -260,7 +260,6 @@ export default {
       })
     },
     preview (mock) {
-      console.log(mock)
       let params = []
       params.push(encodeURIComponent('method') + '=' + encodeURIComponent(mock.method))
       if (mock.body) {
